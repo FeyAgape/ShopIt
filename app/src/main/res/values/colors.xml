@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Main Colours for the app -->
     <color name="colorPrimary">#26a69a</color>
     <color name="colorPrimaryDark">#00766c</color>
     <color name="colorAccent">#64d8cb</color>
 
-    <!-- Primary color for the editor -->
+    <!-- Colours for the editor -->
     <color name="editorColorPrimary">#004d40</color>
-
-    <!-- Primary dark color for the editor -->
     <color name="editorColorPrimaryDark">#00251a</color>
+
+    <color name="ColorGray">#f1f1f1</color>
+    <color name="ColorWhite">#fff</color>
 
 </resources>

@@ -1,13 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?><!-- Layout for the editor -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="@dimen/activity_margin"
+    android:layout_height="wrap_content"
     tools:context=".EditorActivity">
 
-    <!-- Label -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/activity_margin">
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/view2"
+            android:layout_width="135dp"
+            android:layout_height="135dp"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/activity_margin"
+            android:innerRadius="60dp"
+            android:shape="ring"
+            app:cardCornerRadius="60dp">
+
+            <ImageView
+                android:id="@+id/imageView1"
+                android:layout_width="135dp"
+                android:layout_height="135dp"
+                android:layout_alignLeft="@+id/view2"
+                android:layout_alignParentTop="true"
+                android:layout_alignStart="@+id/view2"
+                android:scaleType="centerCrop"
+                android:src="@drawable/supplier" />
+
+        </android.support.v7.widget.CardView>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:src="@drawable/ic_camera"
+            app:backgroundTint="@android:color/background_light" />
+
+        <!-- Label -->
     <TextView
         style="@style/style1"
         android:text="@string/overview" />
@@ -80,7 +115,17 @@
         </RelativeLayout>
     </LinearLayout>
 
-    <!-- Gender category -->
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_margin="@dimen/fab_margin"
+            android:src="@drawable/supplier"
+            app:backgroundTint="@android:color/background_light" />
+
+        <!-- type category -->
     <LinearLayout
         android:id="@+id/container_type"
         android:layout_width="match_parent"
@@ -108,6 +153,6 @@
                 android:spinnerMode="dropdown" />
         </LinearLayout>
     </LinearLayout>
+    </LinearLayout>
 
-
-</LinearLayout>
+</ScrollView>

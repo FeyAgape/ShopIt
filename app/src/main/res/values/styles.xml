@@ -40,7 +40,6 @@
     <style name="EditorFieldStyle">
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:paddingLeft">16dp</item>
         <item name="android:textAppearance">?android:textAppearanceMedium</item>
     </style>
 
@@ -48,11 +47,9 @@
     <style name="EditorSymbolStyle">
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_alignParentLeft">true</item>
-        <item name="android:paddingRight">16dp</item>
-        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_alignParentRight">true</item>
         <item name="android:paddingTop">16dp</item>
-        <item name="android:textAppearance">?android:textAppearanceLarge</item>
+        <item name="android:textAppearance">?android:textAppearanceSmall</item>
     </style>
 
 </resources>
