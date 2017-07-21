@@ -42,14 +42,14 @@
 
     <!-- Label for measurement information in the editor [CHAR LIMIT=30] -->
     <string name="product_price">Price</string>
+    <string name="price_symbol">£</string>
+    <string name="quality">0</string>
 
     <!-- Text hint in the editor [CHAR LIMIT=30] -->
     <string name="hint_name">Name</string>
     <string name="hint_supplier">Supplier</string>
     <string name="hint_price">Price</string>
 
-    <!-- Units for weight of the pet (kilograms) [CHAR LIMIT=5] -->
-    <string name="price_symbol">£</string>
 
     <!-- Label for dropdown menu option for the type of stock [CHAR LIMIT=20] -->
     <string name="product_type">Type</string>
