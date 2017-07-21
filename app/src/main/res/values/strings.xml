@@ -11,7 +11,7 @@
     <string name="empty_view_subtitle_text">Get started by adding an item to sell</string>
 
     <!-- Title for the activity to add a new item [CHAR LIMIT=20] -->
-    <string name="editor_activity_title_new_stock">Add a Stock</string>
+    <string name="editor_activity_title_new_stock">Add Stock</string>
 
     <!-- Title for the activity to edit an existing Stock [CHAR LIMIT=20] -->
     <string name="editor_activity_title_edit_stock">Edit Stock</string>
