@@ -1,3 +1,60 @@
 <resources>
     <string name="app_name">ShopIt</string>
+
+    <!-- Label for overflow menu option  [CHAR LIMIT=20] -->
+    <string name="action_insert_dummy_data">Insert Dummy Data</string>
+    <string name="action_delete_all_entries">Delete All stock</string>
+    <string name="action_delete">Delete</string>
+
+    <!-- Title text for the empty view [CHAR LIMIT=50] -->
+    <string name="empty_view_title_text">There are no stock for sale</string>
+    <string name="empty_view_subtitle_text">Get started by adding an item to sell</string>
+
+    <!-- Title for the activity to add a new item [CHAR LIMIT=20] -->
+    <string name="editor_activity_title_new_stock">Add a Stock</string>
+
+    <!-- Title for the activity to edit an existing Stock [CHAR LIMIT=20] -->
+    <string name="editor_activity_title_edit_stock">Edit Stock</string>
+
+    <!-- Label for editor menu option [CHAR LIMIT=20] -->
+    <string name="action_save">Save</string>
+
+    <!-- Toast message in editor [CHAR LIMIT=NONE] -->
+    <string name="editor_insert_stock_successful">Stock saved</string>
+    <string name="editor_insert_stock_failed">Error with saving Stock</string>
+    <string name="editor_update_stock_successful">Stock updated</string>
+    <string name="editor_update_stock_failed">Error with updating Stock</string>
+    <string name="editor_delete_stock_successful">Stock deleted</string>
+    <string name="editor_delete_stock_failed">Error with deleting Stock</string>
+
+
+    <!-- Dialog message  [CHAR LIMIT=NONE] -->
+    <string name="unsaved_changes_dialog_msg">Discard your changes and quit editing?</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep Editing</string>
+    <string name="delete_dialog_msg">Delete this stock?</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Label for overview category of attributes in the editor [CHAR LIMIT=30] -->
+    <string name="product_overview">Stock</string>
+    <string name="overview">Product Overview</string>
+
+    <!-- Label for measurement information in the editor [CHAR LIMIT=30] -->
+    <string name="product_price">Price</string>
+
+    <!-- Text hint in the editor [CHAR LIMIT=30] -->
+    <string name="hint_name">Name</string>
+    <string name="hint_supplier">Supplier</string>
+    <string name="hint_price">Price</string>
+
+    <!-- Units for weight of the pet (kilograms) [CHAR LIMIT=5] -->
+    <string name="price_symbol">£</string>
+
+    <!-- Label for dropdown menu option for the type of stock [CHAR LIMIT=20] -->
+    <string name="product_type">Type</string>
+    <string name="type_unknown">Unknown</string>
+    <string name="type_one">Perishable</string>
+    <string name="type_two">Non-perishable</string>
+    <string name="unknown_type">Unknown supplier</string>
 </resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <!-- These are the options displayed in the type drop-down Spinner -->
+    <string-array name="array_type_options">
+        <item>@string/type_unknown</item>
+        <item>@string/type_one</item>
+        <item>@string/type_two</item>
+    </string-array>
+</resources>
