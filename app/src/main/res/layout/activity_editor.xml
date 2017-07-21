@@ -125,29 +125,28 @@
                 android:id="@+id/remove"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_marginEnd="46dp"
-                android:layout_marginRight="46dp"
-                android:layout_toLeftOf="@+id/textView"
-                android:layout_toStartOf="@+id/textView"
+                android:layout_marginEnd="38dp"
+                android:layout_marginRight="38dp"
                 android:backgroundTint="@color/ColorGray"
-                app:srcCompat="@drawable/remove" />
+                app:srcCompat="@drawable/remove"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@+id/textView"
+                android:layout_toStartOf="@+id/textView" />
 
             <TextView
                 android:id="@+id/textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_gravity="end"
-                android:layout_marginEnd="32dp"
-                android:layout_marginRight="32dp"
-                android:layout_toLeftOf="@+id/add"
-                android:layout_toStartOf="@+id/add"
+                android:layout_marginEnd="36dp"
+                android:layout_marginRight="36dp"
                 android:padding="@dimen/activity_margin"
                 android:text="@string/quality"
                 android:textColor="@color/editorColorPrimaryDark"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@+id/add"
+                android:layout_toStartOf="@+id/add" />
 
             <ImageButton
                 android:id="@+id/add"
