@@ -118,9 +118,9 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu options from the res/menu/menu_catalog.xml file.
+        // Inflate the menu options from the res/menu/menu_inventoryry.xml file.
         // This adds menu items to the app bar.
-        getMenuInflater().inflate(R.menu.menu_catalog, menu);
+        getMenuInflater().inflate(R.menu.menu_inventory, menu);
         return true;
     }
 

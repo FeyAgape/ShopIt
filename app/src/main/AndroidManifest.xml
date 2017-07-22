@@ -27,7 +27,8 @@
         <provider
             android:name=".data.StockProvider"
             android:authorities="com.example.android.shopit"
-            android:exported="false" />
+            android:exported="false"
+            android:grantUriPermissions="true" />
 
     </application>
 

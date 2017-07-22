@@ -1,12 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Layout for a single list item -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?><!-- Layout for a single list item --><!-- The descendantFocusability allow the listView.setOnClickListener(this) and imagebutton to be called  -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:descendantFocusability="blocksDescendants"
     android:padding="@dimen/activity_margin">
 
-    <TextView
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
         android:id="@+id/name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -21,4 +26,49 @@
         android:textAppearance="?android:textAppearanceSmall"
         android:textColor="@color/colorPrimary"
         tools:text="@string/hint_supplier" />
-</LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/symbol_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="135dp"
+        android:padding="@dimen/activity_margin"
+        android:text="@string/price_symbol"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textColor="@color/colorAccent" />
+
+    <TextView
+        android:id="@+id/item_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="120dp"
+        android:padding="@dimen/activity_margin"
+        android:text="@string/quantity"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textColor="@color/colorAccent" />
+
+    <TextView
+        android:id="@+id/item_quantity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="60dp"
+        android:padding="@dimen/activity_margin"
+        android:text="@string/quantity"
+        android:textAppearance="?android:textAppearanceSmall"
+        android:textColor="@color/colorPrimary"
+        android:textSize="18dp" />
+
+    <ImageButton
+        android:id="@+id/sale_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:backgroundTint="@color/ColorGray"
+        android:onClick="onSalePress"
+        android:src="@drawable/buy" />
+</RelativeLayout>

@@ -141,9 +141,15 @@ public class StockProvider extends ContentProvider {
 
         // Check that the type is valid
         Integer type = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_TYPE);
-        if (type == null || !StockContract.StockEntry.isValidGender(type)) {
+        if (type == null || !StockContract.StockEntry.isValidType(type)) {
             throw new IllegalArgumentException("Stock requires valid type");
         }
+
+        // Check that the quantity is not less than 0
+        Integer quantity = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_QUANTITY);
+
+        if (quantity != null && !StockContract.StockEntry.quantityNotZero(quantity))
+            throw new IllegalArgumentException("Stock cannot have a negative quantity");
 
         // If the price is provided, check that it's greater than or equal to £0
         Integer price = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_PRICE);
@@ -208,8 +214,8 @@ public class StockProvider extends ContentProvider {
         // If the {@link StockEntry#COLUMN_STOCK_TYPE} key is present,
         // check that the type value is valid.
         if (values.containsKey(StockContract.StockEntry.COLUMN_STOCK_TYPE)) {
-            Integer gender = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_TYPE);
-            if (gender == null || !StockContract.StockEntry.isValidGender(gender)) {
+            Integer type = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_TYPE);
+            if (type == null || !StockContract.StockEntry.isValidType(type)) {
                 throw new IllegalArgumentException("Stock requires valid type");
             }
         }
@@ -218,9 +224,9 @@ public class StockProvider extends ContentProvider {
         // check that the price is valid.
         if (values.containsKey(StockContract.StockEntry.COLUMN_STOCK_PRICE)) {
             // Check that the price is greater than or equal to £0
-            Integer weight = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_PRICE);
-            if (weight != null && weight < 0) {
-                throw new IllegalArgumentException("Stock requires valid weight");
+            Integer price = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_PRICE);
+            if (price != null && !StockContract.StockEntry.quantityNotZero(price)) {
+                throw new IllegalArgumentException("Stock requires valid price");
             }
         }
 

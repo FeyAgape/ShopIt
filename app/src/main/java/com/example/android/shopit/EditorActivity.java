@@ -1,5 +1,6 @@
 package com.example.android.shopit;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
@@ -8,9 +9,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
+import android.provider.OpenableColumns;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -20,17 +26,28 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.shopit.data.StockContract;
 import com.example.android.shopit.data.StockContract.StockEntry;
+
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Allows user to create a new stork or edit an existing one.
  */
 public class EditorActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
+
+    private static final int IMAGE_REQUEST = 0;
+    private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.shopit.data.StockContract.StockEntry";
 
     /**
      * Identifier for the stork data loader
@@ -43,19 +60,33 @@ public class EditorActivity extends AppCompatActivity implements
     private Uri mCurrentStockUri;
 
     /**
-     * EditText field to enter the stock's name
+     * Image related for the camera
+     */
+    private ImageView mStockImageView;
+    private Bitmap bitmap;
+    private Uri uri;
+    private boolean galleryImage = false;
+    private String uriString;
+
+    /**
+     * EditText fields
      */
     private EditText mNameEditText;
-
-    /**
-     * EditText field to enter the stock's supplier name
-     */
     private EditText mSupplierEditText;
+    private EditText mPriceEditText;
 
     /**
-     * EditText field to enter the stock price
+     * TextView and ImageButton's for the quantity amount
      */
-    private EditText mPriceEditText;
+    private TextView mQuantityTextView;
+    private ImageButton mRemoveImageButton;
+    private ImageButton mAddImageButton;
+
+    /**
+     * ImageButton and ImageView for the camera element
+     */
+    private ImageButton mCameraImageButton;
+
 
     /**
      * EditText field to enter the stork's type
@@ -118,7 +149,17 @@ public class EditorActivity extends AppCompatActivity implements
         mNameEditText = (EditText) findViewById(R.id.edit_stock_name);
         mSupplierEditText = (EditText) findViewById(R.id.edit_stock_supplier);
         mPriceEditText = (EditText) findViewById(R.id.edit_stock_price);
+
+        mAddImageButton = (ImageButton) findViewById(R.id.add);
+        mRemoveImageButton = (ImageButton) findViewById(R.id.remove);
+
         mTypeSpinner = (Spinner) findViewById(R.id.spinner_type);
+
+        mQuantityTextView = (TextView) findViewById(R.id.quantity_textView);
+        mStockImageView = (ImageView) findViewById(R.id.stock_image);
+
+        mCameraImageButton = (ImageButton) findViewById(R.id.camera);
+
 
         // Setup OnTouchListeners on all the input fields, so we can determine if the user
         // has touched or modified them. This will let us know if there are unsaved changes
@@ -126,7 +167,12 @@ public class EditorActivity extends AppCompatActivity implements
         mNameEditText.setOnTouchListener(mTouchListener);
         mSupplierEditText.setOnTouchListener(mTouchListener);
         mPriceEditText.setOnTouchListener(mTouchListener);
+
+        mAddImageButton.setOnTouchListener(mTouchListener);
+        mRemoveImageButton.setOnTouchListener(mTouchListener);
+        mCameraImageButton.setOnTouchListener(mTouchListener);
         mTypeSpinner.setOnTouchListener(mTouchListener);
+
 
         setupSpinner();
     }
@@ -170,15 +216,188 @@ public class EditorActivity extends AppCompatActivity implements
         });
     }
 
+    // open an email when the user clicks the supplier order more button
+    public void composeEmail(View view) {
+
+        String message = getString(R.string.email_body)
+                + mNameEditText.getText().toString().trim() + "\n";
+
+        message = message + getString(R.string.email_extra);
+
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+
+        intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
+    }
+
+    public void increaseQuantity(View view) {
+
+        String quantity = mQuantityTextView.getText().toString().trim();
+
+        int q = Integer.parseInt(quantity);
+        q++;
+        String finalQuantity = String.valueOf(q);
+
+        mQuantityTextView.setText(finalQuantity);
+    }
+
+    public void decreaseQuantity(View view) {
+
+        String quantity = mQuantityTextView.getText().toString().trim();
+
+        int q = Integer.parseInt(quantity);
+        if (q > 0) {
+            q--;
+            String finalQuantity = String.valueOf(q);
+            mQuantityTextView.setText(finalQuantity);
+        } else
+            Toast.makeText(this, getString(R.string.negative_quantity),
+                    Toast.LENGTH_SHORT).show();
+    }
+
+    public void onSalePress(View view) {
+
+        Toast.makeText(this, R.string.sale_button, Toast.LENGTH_SHORT).show();
+    }
+
+    // open the camera with intent when the user clicks the camera button
+    public void addNewImage(View view) {
+
+        Intent intent;
+        intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), IMAGE_REQUEST);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCodes, Intent resultData) {
+
+        if (resultCodes == Activity.RESULT_OK && resultData != null) {
+            uri = resultData.getData();
+            bitmap = getBitmapFromCurrentItemURI(uri);
+            mStockImageView.setImageBitmap(bitmap);
+            uriString = getShareableImageUri().toString();
+            galleryImage = true;
+        }
+    }
+
+    private Bitmap getBitmapFromCurrentItemURI(Uri uri) {
+
+        ParcelFileDescriptor parcelFileDescriptor = null;
+
+        try {
+
+            parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r");
+            FileDescriptor fileDescriptor = null;
+
+            if (parcelFileDescriptor != null)
+                fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+
+            Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);
+
+            if (parcelFileDescriptor != null) parcelFileDescriptor.close();
+
+            return image;
+        } catch (Exception e) {
+
+            return null;
+        } finally {
+
+            try {
+
+                if (parcelFileDescriptor != null) parcelFileDescriptor.close();
+
+            } catch (IOException e) {
+
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public Uri getShareableImageUri() {
+
+        Uri imagesUri;
+
+        if (galleryImage) {
+            String filename = PathFinder();
+            savingInFile(getCacheDir(), filename, bitmap, Bitmap.CompressFormat.JPEG, 100);
+            File imagesFile = new File(getCacheDir(), filename);
+
+            imagesUri = FileProvider.getUriForFile(this, FILE_PROVIDER_AUTHORITY, imagesFile);
+        } else {
+
+            imagesUri = uri;
+        }
+        return imagesUri;
+    }
+
+    public String PathFinder() {
+
+        Cursor returnCursor =
+                getContentResolver().query
+                        (uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
+
+        if (returnCursor != null) returnCursor.moveToFirst();
+
+        String fileNames = null;
+
+        if (returnCursor != null) fileNames = returnCursor.getString
+                (returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+
+        if (returnCursor != null) returnCursor.close();
+
+        return fileNames;
+    }
+
+    public boolean savingInFile(File dir, String fileName, Bitmap bm, Bitmap.CompressFormat format,
+                                int quality) {
+
+        File imagesFile = new File(dir, fileName);
+
+        FileOutputStream fileOutputStream = null;
+
+        try {
+
+            fileOutputStream = new FileOutputStream(imagesFile);
+            bm.compress(format, quality, fileOutputStream);
+            fileOutputStream.close();
+
+            return true;
+
+        } catch (IOException e) {
+
+            if (fileOutputStream != null) try {
+
+                fileOutputStream.close();
+
+            } catch (IOException e1) {
+
+                e1.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+
     /**
      * Get user input from editor and save stock into database.
      */
     private void saveStock() {
         // Read from input fields
         // Use trim to eliminate leading or trailing white space
+        String imageString = uriString;
         String nameString = mNameEditText.getText().toString().trim();
         String supplierString = mSupplierEditText.getText().toString().trim();
+        String quantityString = mQuantityTextView.getText().toString().trim();
         String priceString = mPriceEditText.getText().toString().trim();
+
+        Stock newStock = new Stock(nameString, supplierString, imageString, quantityString, priceString);
 
         // Check if this is supposed to be a new store
         // and check if all the fields in the editor are blank

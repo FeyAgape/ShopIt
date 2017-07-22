@@ -43,6 +43,8 @@ public class StockDbHelper extends SQLiteOpenHelper {
                 + StockEntry.COLUMN_STOCK_NAME + " TEXT NOT NULL, "
                 + StockEntry.COLUMN_STOCK_SUPPLIER + " TEXT NOT NULL, "
                 + StockContract.StockEntry.COLUMN_STOCK_TYPE + " INTEGER NOT NULL, "
+                + StockEntry.COLUMN_STOCK_QUANTITY + " INTEGER, "
+                + StockEntry.COLUMN_STOCK_IMAGE + " TEXT, "
                 + StockEntry.COLUMN_STOCK_PRICE + " INTEGER NOT NULL DEFAULT 0);";
 
         // Execute the SQL statement

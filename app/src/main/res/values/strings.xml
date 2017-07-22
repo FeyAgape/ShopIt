@@ -10,10 +10,8 @@
     <string name="empty_view_title_text">There are no stock for sale</string>
     <string name="empty_view_subtitle_text">Get started by adding an item to sell</string>
 
-    <!-- Title for the activity to add a new item [CHAR LIMIT=20] -->
+    <!-- Title for the activity[CHAR LIMIT=20] -->
     <string name="editor_activity_title_new_stock">Add Stock</string>
-
-    <!-- Title for the activity to edit an existing Stock [CHAR LIMIT=20] -->
     <string name="editor_activity_title_edit_stock">Edit Stock</string>
 
     <!-- Label for editor menu option [CHAR LIMIT=20] -->
@@ -26,7 +24,8 @@
     <string name="editor_update_stock_failed">Error with updating Stock</string>
     <string name="editor_delete_stock_successful">Stock deleted</string>
     <string name="editor_delete_stock_failed">Error with deleting Stock</string>
-
+    <string name="negative_quantity">Stock cannot have a negative quantity</string>
+    <string name="sale_button">Sale made</string>
 
     <!-- Dialog message  [CHAR LIMIT=NONE] -->
     <string name="unsaved_changes_dialog_msg">Discard your changes and quit editing?</string>
@@ -40,10 +39,15 @@
     <string name="product_overview">Stock</string>
     <string name="overview">Product Overview</string>
 
+    <string name="email_subject">Restock needed</string>
+    <string name="email_body">Stock items to be restock are:</string>
+    <string name="email_extra">Quantity: 10(default)</string>
+
+
     <!-- Label for measurement information in the editor [CHAR LIMIT=30] -->
     <string name="product_price">Price</string>
     <string name="price_symbol">£</string>
-    <string name="quality">0</string>
+    <string name="quantity">0</string>
 
     <!-- Text hint in the editor [CHAR LIMIT=30] -->
     <string name="hint_name">Name</string>

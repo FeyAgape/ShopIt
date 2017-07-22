@@ -79,6 +79,13 @@ public final class StockContract {
         public final static String COLUMN_STOCK_SUPPLIER = "supplier";
 
         /**
+         * Number of items in stock
+         * <p>
+         * Type: INTEGER
+         */
+        public final static String COLUMN_STOCK_QUANTITY = "quantity";
+
+        /**
          * Type of stock.
          * <p>
          * The only possible values are {@link #TYPE_UNKNOWN}, {@link #TYPE_ONE},
@@ -94,23 +101,32 @@ public final class StockContract {
          * Type: INTEGER
          */
         public final static String COLUMN_STOCK_PRICE = "price";
-
         /**
          * Possible values for the type of stock.
          */
         public static final int TYPE_UNKNOWN = 0;
         public static final int TYPE_ONE = 1;
         public static final int TYPE_TWO = 2;
+        /**
+         * Image of the item
+         * <p>
+         * TYPE: BYTE
+         */
+        final static String COLUMN_STOCK_IMAGE = "image";
 
         /**
          * Returns whether or not the given type is {@link #TYPE_UNKNOWN}, {@link #TYPE_ONE},
          * or {@link #TYPE_TWO}.
          */
-        public static boolean isValidGender(int gender) {
-            if (gender == TYPE_UNKNOWN || gender == TYPE_ONE || gender == TYPE_TWO) {
+        public static boolean isValidType(int type) {
+            if (type == TYPE_UNKNOWN || type == TYPE_ONE || type == TYPE_TWO) {
                 return true;
             }
             return false;
+        }
+
+        public static boolean quantityNotZero(int quantity) {
+            return quantity >= 0;
         }
     }
 
