@@ -26,6 +26,8 @@
     <string name="editor_delete_stock_failed">Error with deleting Stock</string>
     <string name="negative_quantity">Stock cannot have a negative quantity</string>
     <string name="sale_button">Sale made</string>
+    <string name="sale_successful">Stock sold</string>
+    <string name="sale_unsuccessful">No more stock</string>
 
     <!-- Dialog message  [CHAR LIMIT=NONE] -->
     <string name="unsaved_changes_dialog_msg">Discard your changes and quit editing?</string>

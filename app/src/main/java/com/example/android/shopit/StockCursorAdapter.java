@@ -4,17 +4,25 @@ package com.example.android.shopit;
  * Created by FEY-AGAPE on 20/07/2017.
  */
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.shopit.data.StockContract.StockEntry;
+
+import static com.example.android.shopit.R.string.quantity;
+import static java.lang.Integer.parseInt;
 
 /**
  * {@link StockCursorAdapter} is an adapter for a list or grid view
@@ -59,30 +67,60 @@ public class StockCursorAdapter extends CursorAdapter {
      *                correct row.
      */
     @Override
-    public void bindView(View view, Context context, Cursor cursor) {
+    public void bindView(View view, final Context context, Cursor cursor) {
         // Find individual views that we want to modify in the list item layout
         TextView nameTextView = (TextView) view.findViewById(R.id.name);
         TextView supplierTextView = (TextView) view.findViewById(R.id.supplier);
         TextView priceTextView = (TextView) view.findViewById(R.id.item_price);
-        TextView quantityTextView = (TextView) view.findViewById(R.id.item_quantity);
+        final TextView quantityTextView = (TextView) view.findViewById(R.id.item_quantity);
         ImageButton saleButton = (ImageButton) view.findViewById(R.id.sale_button);
 
 
         // Find the columns of stock attributes that we're interested in
-        int nameColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_NAME);
+        final String nameColumnIndex = cursor.getString(cursor.getColumnIndex(StockEntry.COLUMN_STOCK_NAME));
         int supplierColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_SUPPLIER);
-        int quantityColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_QUANTITY);
+        final String quantityColumnIndex = cursor.getString(cursor.getColumnIndex(StockEntry.COLUMN_STOCK_QUANTITY));
         int priceColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_PRICE);
-        int id = cursor.getInt(0);
+        final long id = cursor.getLong(cursor.getColumnIndex(StockEntry._ID));
 
-        if (saleButton != null)
-            saleButton.setId(id);
+        // buy button listener
+
+        saleButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+
+                int stockQuantity = parseInt(quantityTextView.getText().toString());
+                stockQuantity -= 1;
+
+                if (stockQuantity < 0) {
+                    stockQuantity = 0;
+                }
+                quantityTextView.setText(Integer.toString(stockQuantity));
+
+                // find values to update in database
+                ContentValues values = new ContentValues();
+                values.put(StockEntry.COLUMN_STOCK_QUANTITY, stockQuantity);
+
+                // find current stork URI
+                Uri currentStockUri = ContentUris.withAppendedId(StockEntry.CONTENT_URI, id);
+
+                // update affected row in database
+                int rowAffected = context.getContentResolver().update(currentStockUri, values, null, null);
+                Log.v("StockCursor", "Number of rows affected: " + rowAffected);
+                if (rowAffected != 0 && stockQuantity != 0) {
+                    Toast.makeText(context, R.string.sale_successful, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(context, R.string.sale_unsuccessful, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
 
         // Read the stock attributes from the Cursor for the current stock
-        String stockName = cursor.getString(nameColumnIndex);
+        String stockName = (nameColumnIndex);
         String stockSupplier = cursor.getString(supplierColumnIndex);
-        String stockQuantity = cursor.getString(quantityColumnIndex);
+        String stockQuantity = (quantityColumnIndex);
         String stockPrice = cursor.getString(priceColumnIndex);
 
         // If the stock supplier is empty string or null, then use some default text
@@ -91,7 +129,7 @@ public class StockCursorAdapter extends CursorAdapter {
             stockSupplier = context.getString(R.string.unknown_type);
 
             if (TextUtils.isEmpty(stockPrice))
-                stockPrice = context.getString(R.string.quantity);
+                stockPrice = context.getString(quantity);
 
         }
 

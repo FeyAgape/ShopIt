@@ -46,51 +46,40 @@ import java.io.IOException;
 public class EditorActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int IMAGE_REQUEST = 0;
     private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.shopit.data.StockContract.StockEntry";
 
-    /**
-     * Identifier for the stork data loader
-     */
-    private static final int EXISTING_STOCK_LOADER = 0;
 
-    /**
-     * Content URI for the existing stork (null if it's new)
-     */
+    //Identifier for the stork data loader
+    private static final int EXISTING_STOCK_LOADER = 0;
+    private static final int STOCK_IMAGE = 0;
+
+    //Content URI for the existing stork (null if it's new)
     private Uri mCurrentStockUri;
 
-    /**
-     * Image related for the camera
-     */
-    private ImageView mStockImageView;
+    //Image related
+    private ImageView itemImage;
     private Bitmap bitmap;
     private Uri uri;
     private boolean galleryImage = false;
     private String uriString;
 
-    /**
-     * EditText fields
-     */
+    //EditText fields
     private EditText mNameEditText;
     private EditText mSupplierEditText;
     private EditText mPriceEditText;
 
-    /**
-     * TextView and ImageButton's for the quantity amount
-     */
+    //TextView and ImageButton's for the quantity amount
     private TextView mQuantityTextView;
-    private ImageButton mRemoveImageButton;
-    private ImageButton mAddImageButton;
+    private ImageButton mReduceQuantity;
+    private ImageButton mIncreaseQuantity;
 
-    /**
-     * ImageButton and ImageView for the camera element
-     */
-    private ImageButton mCameraImageButton;
+    // ImageView for the stock image
+    private ImageView mStockImageView;
 
+    //Supplier order more ImageButton
+    private ImageButton mOrderMore;
 
-    /**
-     * EditText field to enter the stork's type
-     */
+    //EditText field to enter the stock's type
     private Spinner mTypeSpinner;
 
     /**
@@ -100,9 +89,7 @@ public class EditorActivity extends AppCompatActivity implements
      */
     private int mType = StockContract.StockEntry.TYPE_UNKNOWN;
 
-    /**
-     * Boolean flag that keeps track of whether the stock has been edited (true) or not (false)
-     */
+    // Boolean flag that keeps track of whether the stock has been edited (true) or not (false)
     private boolean mStockHasChanged = false;
 
     /**
@@ -149,16 +136,15 @@ public class EditorActivity extends AppCompatActivity implements
         mNameEditText = (EditText) findViewById(R.id.edit_stock_name);
         mSupplierEditText = (EditText) findViewById(R.id.edit_stock_supplier);
         mPriceEditText = (EditText) findViewById(R.id.edit_stock_price);
-
-        mAddImageButton = (ImageButton) findViewById(R.id.add);
-        mRemoveImageButton = (ImageButton) findViewById(R.id.remove);
-
         mTypeSpinner = (Spinner) findViewById(R.id.spinner_type);
-
+        mIncreaseQuantity = (ImageButton) findViewById(R.id.add);
+        mReduceQuantity = (ImageButton) findViewById(R.id.remove);
         mQuantityTextView = (TextView) findViewById(R.id.quantity_textView);
         mStockImageView = (ImageView) findViewById(R.id.stock_image);
+        mOrderMore = (ImageButton) findViewById(R.id.supplier_order_more);
 
-        mCameraImageButton = (ImageButton) findViewById(R.id.camera);
+        // Placeholder image for image view
+        mStockImageView.setImageResource(R.drawable.supplier);
 
 
         // Setup OnTouchListeners on all the input fields, so we can determine if the user
@@ -167,12 +153,12 @@ public class EditorActivity extends AppCompatActivity implements
         mNameEditText.setOnTouchListener(mTouchListener);
         mSupplierEditText.setOnTouchListener(mTouchListener);
         mPriceEditText.setOnTouchListener(mTouchListener);
-
-        mAddImageButton.setOnTouchListener(mTouchListener);
-        mRemoveImageButton.setOnTouchListener(mTouchListener);
-        mCameraImageButton.setOnTouchListener(mTouchListener);
         mTypeSpinner.setOnTouchListener(mTouchListener);
-
+        mIncreaseQuantity.setOnTouchListener(mTouchListener);
+        mReduceQuantity.setOnTouchListener(mTouchListener);
+        mQuantityTextView.setOnTouchListener(mTouchListener);
+        mStockImageView.setOnTouchListener(mTouchListener);
+        mOrderMore.setOnTouchListener(mTouchListener);
 
         setupSpinner();
     }
@@ -272,7 +258,7 @@ public class EditorActivity extends AppCompatActivity implements
         intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), IMAGE_REQUEST);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), STOCK_IMAGE);
     }
 
     @Override
@@ -397,7 +383,6 @@ public class EditorActivity extends AppCompatActivity implements
         String quantityString = mQuantityTextView.getText().toString().trim();
         String priceString = mPriceEditText.getText().toString().trim();
 
-        Stock newStock = new Stock(nameString, supplierString, imageString, quantityString, priceString);
 
         // Check if this is supposed to be a new store
         // and check if all the fields in the editor are blank

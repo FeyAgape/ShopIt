@@ -75,10 +75,10 @@ public class MainActivity extends AppCompatActivity implements
                 // {@link StockEntry#CONTENT_URI}.
                 // For example, the URI would be "content://com.example.android.shopit/stocks/2"
                 // if the stock with ID 2 was clicked on.
-                Uri currentPetUri = ContentUris.withAppendedId(StockContract.StockEntry.CONTENT_URI, id);
+                Uri currentStockUri = ContentUris.withAppendedId(StockContract.StockEntry.CONTENT_URI, id);
 
                 // Set the URI on the data field of the intent
-                intent.setData(currentPetUri);
+                intent.setData(currentStockUri);
 
                 // Launch the {@link EditorActivity} to display the data for the current stock.
                 startActivity(intent);
@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements
         values.put(StockContract.StockEntry.COLUMN_STOCK_SUPPLIER, "Loreal");
         values.put(StockContract.StockEntry.COLUMN_STOCK_TYPE, StockContract.StockEntry.TYPE_TWO);
         values.put(StockContract.StockEntry.COLUMN_STOCK_PRICE, 5);
+        values.put(StockContract.StockEntry.COLUMN_STOCK_QUANTITY, 10);
 
         // Insert a new row for Loreal Eyeliner into the provider using the ContentResolver.
         // Use the {@link StockEntry#CONTENT_URI} to indicate that we want to insert
@@ -118,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu options from the res/menu/menu_inventoryry.xml file.
+        // Inflate the menu options from the res/menu/menu_inventory.xml file.
         // This adds menu items to the app bar.
         getMenuInflater().inflate(R.menu.menu_inventory, menu);
         return true;
@@ -146,7 +147,11 @@ public class MainActivity extends AppCompatActivity implements
         String[] projection = {
                 StockContract.StockEntry._ID,
                 StockContract.StockEntry.COLUMN_STOCK_NAME,
+                StockContract.StockEntry.COLUMN_STOCK_QUANTITY,
+                StockContract.StockEntry.COLUMN_STOCK_TYPE,
+                StockContract.StockEntry.COLUMN_STOCK_PRICE,
                 StockContract.StockEntry.COLUMN_STOCK_SUPPLIER};
+
 
         // This loader will execute the ContentProvider's query method on a background thread
         return new CursorLoader(this,   // Parent activity context
