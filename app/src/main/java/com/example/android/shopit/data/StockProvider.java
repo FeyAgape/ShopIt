@@ -11,6 +11,8 @@ import android.util.Log;
 
 import com.example.android.shopit.data.StockContract.StockEntry;
 
+import static com.example.android.shopit.R.string.quantity;
+
 /**
  * Created by FEY-AGAPE on 20/07/2017.
  */
@@ -86,7 +88,7 @@ public class StockProvider extends ContentProvider {
                 // For the STOCKS code, query the stocks table directly with the given
                 // projection, selection, selection arguments, and sort order. The cursor
                 // could contain multiple rows of the stocks table.
-                cursor = database.query(StockContract.StockEntry.TABLE_NAME, projection, selection, selectionArgs,
+                cursor = database.query(StockEntry.TABLE_NAME, projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
             case STOCK_ID:
@@ -96,7 +98,7 @@ public class StockProvider extends ContentProvider {
                 // For every "?" in the selection, we need to have an element in the selection
                 // arguments that will fill in the "?". Since we have 1 question mark in the
                 // selection, we have 1 String in the selection arguments' String array.
-                selection = StockContract.StockEntry._ID + "=?";
+                selection = StockEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
 
                 // This will perform a query on the stocks table where the _id equals 3 to return a
@@ -133,37 +135,46 @@ public class StockProvider extends ContentProvider {
      * for that specific row in the database.
      */
     private Uri insertStock(Uri uri, ContentValues values) {
+
+        // Get writable database.
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
+
         // Check that the name is not null
-        String name = values.getAsString(StockContract.StockEntry.COLUMN_STOCK_NAME);
+        String name = values.getAsString(StockEntry.COLUMN_STOCK_NAME);
         if (name == null) {
             throw new IllegalArgumentException("Stock requires a name");
         }
 
         // Check that the type is valid
-        Integer type = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_TYPE);
-        if (type == null || !StockContract.StockEntry.isValidType(type)) {
+        Integer type = values.getAsInteger(StockEntry.COLUMN_STOCK_TYPE);
+        if (type == null || !StockEntry.isValidType(type)) {
             throw new IllegalArgumentException("Stock requires valid type");
         }
 
-        // Check that the quantity is not less than 0
-        Integer quantity = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_QUANTITY);
+        // Check that the picture is not null.
+        String picture = values.getAsString(StockEntry.COLUMN_STOCK_IMAGE);
+        if (picture == null) {
+            throw new IllegalArgumentException("Stock requires a picture.");
+        }
 
-        if (quantity != null && !StockContract.StockEntry.quantityNotZero(quantity))
-            throw new IllegalArgumentException("Stock cannot have a negative quantity");
+        // Check that the quantity is not less than 0
+        Integer quantity = values.getAsInteger(StockEntry.COLUMN_STOCK_QUANTITY);
+
+        if (quantity != null && quantity < 0) {
+            throw new IllegalArgumentException("Stock can not have a negative quantity");
+        }
 
         // If the price is provided, check that it's greater than or equal to £0
-        Integer price = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_PRICE);
+        Integer price = values.getAsInteger(StockEntry.COLUMN_STOCK_PRICE);
         if (price != null && price < 0) {
             throw new IllegalArgumentException("Stock requires valid price");
         }
 
         // No need to check the Supplier, any value is valid (including null).
 
-        // Get writeable database
-        SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
         // Insert the new stock with the given values
-        long id = database.insert(StockContract.StockEntry.TABLE_NAME, null, values);
+        long id = database.insert(StockEntry.TABLE_NAME, null, values);
         // If the ID is -1, then the insertion failed. Log an error and return null.
         if (id == -1) {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
@@ -188,7 +199,7 @@ public class StockProvider extends ContentProvider {
                 // For the STOCK_ID code, extract out the ID from the URI,
                 // so we know which row to update. Selection will be "_id=?" and selection
                 // arguments will be a String array containing the actual ID.
-                selection = StockContract.StockEntry._ID + "=?";
+                selection = StockEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 return updateStock(uri, contentValues, selection, selectionArgs);
             default:
@@ -204,18 +215,27 @@ public class StockProvider extends ContentProvider {
     private int updateStock(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         // If the {@link StockEntry#COLUMN_STOCK_NAME} key is present,
         // check that the name value is not null.
-        if (values.containsKey(StockContract.StockEntry.COLUMN_STOCK_NAME)) {
-            String name = values.getAsString(StockContract.StockEntry.COLUMN_STOCK_NAME);
+        if (values.containsKey(StockEntry.COLUMN_STOCK_NAME)) {
+            String name = values.getAsString(StockEntry.COLUMN_STOCK_NAME);
             if (name == null) {
                 throw new IllegalArgumentException("Stock requires a name");
             }
         }
 
+        // If the {@link StockEntry#COLUMN_STOCK_IMAGE} key is present,
+        // check that the image value is not null.
+        if (values.containsKey(StockEntry.COLUMN_STOCK_IMAGE)) {
+            String itemPicture = values.getAsString(StockEntry.COLUMN_STOCK_IMAGE);
+            if (itemPicture == null) {
+                throw new IllegalArgumentException("Stock requires a picture.");
+            }
+        }
+
         // If the {@link StockEntry#COLUMN_STOCK_TYPE} key is present,
         // check that the type value is valid.
-        if (values.containsKey(StockContract.StockEntry.COLUMN_STOCK_TYPE)) {
-            Integer type = values.getAsInteger(StockContract.StockEntry.COLUMN_STOCK_TYPE);
-            if (type == null || !StockContract.StockEntry.isValidType(type)) {
+        if (values.containsKey(StockEntry.COLUMN_STOCK_TYPE)) {
+            Integer type = values.getAsInteger(StockEntry.COLUMN_STOCK_TYPE);
+            if (type == null || !StockEntry.isValidType(type)) {
                 throw new IllegalArgumentException("Stock requires valid type");
             }
         }
@@ -230,6 +250,14 @@ public class StockProvider extends ContentProvider {
             }
         }
 
+        // If the {@link ItemEntry#COLUMN_STOCK_QUANTITY} key is present,
+        // check that it's greater than or equal to 0.
+        if (values.containsKey(StockEntry.COLUMN_STOCK_QUANTITY)) {
+            Integer quantity = values.getAsInteger(StockEntry.COLUMN_STOCK_QUANTITY);
+            if (quantity != null && quantity < 0) {
+                throw new IllegalArgumentException("Item requires valid quantity.");
+            }
+        }
         // No need to check the supplier any value is valid (including null).
 
         // If there are no values to update, then don't try to update the database
@@ -237,11 +265,11 @@ public class StockProvider extends ContentProvider {
             return 0;
         }
 
-        // Otherwise, get writeable database to update the data
+        // Otherwise, get Writeable database to update the data
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
         // Perform the update on the database and get the number of rows affected
-        int rowsUpdated = database.update(StockContract.StockEntry.TABLE_NAME, values, selection, selectionArgs);
+        int rowsUpdated = database.update(StockEntry.TABLE_NAME, values, selection, selectionArgs);
 
         // If 1 or more rows were updated, then notify all listeners that the data at the
         // given URI has changed
@@ -265,13 +293,13 @@ public class StockProvider extends ContentProvider {
         switch (match) {
             case STOCKS:
                 // Delete all rows that match the selection and selection args
-                rowsDeleted = database.delete(StockContract.StockEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(StockEntry.TABLE_NAME, selection, selectionArgs);
                 break;
             case STOCK_ID:
                 // Delete a single row given by the ID in the URI
-                selection = StockContract.StockEntry._ID + "=?";
+                selection = StockEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                rowsDeleted = database.delete(StockContract.StockEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(StockEntry.TABLE_NAME, selection, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri);
@@ -292,7 +320,7 @@ public class StockProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case STOCKS:
-                return StockContract.StockEntry.CONTENT_LIST_TYPE;
+                return StockEntry.CONTENT_LIST_TYPE;
             case STOCK_ID:
                 return StockEntry.CONTENT_ITEM_TYPE;
             default:

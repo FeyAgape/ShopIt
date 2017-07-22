@@ -11,8 +11,6 @@ import com.example.android.shopit.data.StockContract.StockEntry;
  */
 public class StockDbHelper extends SQLiteOpenHelper {
 
-    public static final String LOG_TAG = StockDbHelper.class.getSimpleName();
-
     /**
      * Name of the database file
      */
@@ -41,9 +39,9 @@ public class StockDbHelper extends SQLiteOpenHelper {
         String SQL_CREATE_STOCKS_TABLE = "CREATE TABLE " + StockEntry.TABLE_NAME + " ("
                 + StockEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + StockEntry.COLUMN_STOCK_NAME + " TEXT NOT NULL, "
-                + StockEntry.COLUMN_STOCK_SUPPLIER + " TEXT NOT NULL, "
-                + StockContract.StockEntry.COLUMN_STOCK_TYPE + " INTEGER NOT NULL, "
-                + StockEntry.COLUMN_STOCK_QUANTITY + " INTEGER, "
+                + StockEntry.COLUMN_STOCK_SUPPLIER + " TEXT, "
+                + StockEntry.COLUMN_STOCK_TYPE + " INTEGER NOT NULL, "
+                + StockEntry.COLUMN_STOCK_QUANTITY + " INTEGER,NTEGER NOT NULL DEFAULT 0, "
                 + StockEntry.COLUMN_STOCK_IMAGE + " TEXT, "
                 + StockEntry.COLUMN_STOCK_PRICE + " INTEGER NOT NULL DEFAULT 0);";
 

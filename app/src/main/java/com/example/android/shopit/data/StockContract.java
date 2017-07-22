@@ -85,6 +85,7 @@ public final class StockContract {
          */
         public final static String COLUMN_STOCK_QUANTITY = "quantity";
 
+
         /**
          * Type of stock.
          * <p>
@@ -112,7 +113,7 @@ public final class StockContract {
          * <p>
          * TYPE: BYTE
          */
-        final static String COLUMN_STOCK_IMAGE = "image";
+        public final static String COLUMN_STOCK_IMAGE = "image";
 
         /**
          * Returns whether or not the given type is {@link #TYPE_UNKNOWN}, {@link #TYPE_ONE},

@@ -28,27 +28,33 @@
     <string name="sale_button">Sale made</string>
     <string name="sale_successful">Stock sold</string>
     <string name="sale_unsuccessful">No more stock</string>
+    <string name="out_of_stock">Out of Stock</string>
+    <string name="in_stock">In Stock</string>
 
     <!-- Dialog message  [CHAR LIMIT=NONE] -->
     <string name="unsaved_changes_dialog_msg">Discard your changes and quit editing?</string>
     <string name="discard">Discard</string>
     <string name="keep_editing">Keep Editing</string>
     <string name="delete_dialog_msg">Delete this stock?</string>
+    <string name="delete_dialog_all_items">Delete all items?</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
+    <string name="editor_delete_all_items_successful">Items deleted</string>
+    <string name="editor_delete_all_items_failed">Error with deleting all items</string>
+
 
     <!-- Label for overview category of attributes in the editor [CHAR LIMIT=30] -->
     <string name="product_overview">Stock</string>
     <string name="overview">Product Overview</string>
-
     <string name="email_subject">Restock needed</string>
     <string name="email_body">Stock items to be restock are:</string>
     <string name="email_extra">Quantity: 10(default)</string>
 
 
-    <!-- Label for measurement information in the editor [CHAR LIMIT=30] -->
+    <!-- Label for the editor [CHAR LIMIT=30] -->
     <string name="product_price">Price</string>
     <string name="price_symbol">£</string>
+    <string name="stock">Quantity</string>
     <string name="quantity">0</string>
 
     <!-- Text hint in the editor [CHAR LIMIT=30] -->
@@ -63,4 +69,6 @@
     <string name="type_one">Perishable</string>
     <string name="type_two">Non-perishable</string>
     <string name="unknown_type">Unknown supplier</string>
+
+    <string name="dummy_picture_uri">android.resource://com.example.android.shopit/drawable/supplier</string>
 </resources>

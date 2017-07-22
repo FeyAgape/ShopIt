@@ -121,6 +121,11 @@
             android:layout_width="match_parent"
             android:layout_height="50dp">
 
+            <TextView
+                style="@style/ProductStyle2"
+                android:layout_width="wrap_content"
+                android:text="@string/stock" />
+
             <ImageButton
                 android:id="@+id/remove"
                 android:layout_width="wrap_content"

@@ -4,12 +4,14 @@ import android.app.LoaderManager;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -17,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.android.shopit.data.StockContract;
 
@@ -25,7 +28,7 @@ import com.example.android.shopit.data.StockContract;
  */
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
-
+    public static final String LOG_TAG = MainActivity.class.getSimpleName();
     /**
      * Identifier for the stock data loader
      */
@@ -76,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements
                 // For example, the URI would be "content://com.example.android.shopit/stocks/2"
                 // if the stock with ID 2 was clicked on.
                 Uri currentStockUri = ContentUris.withAppendedId(StockContract.StockEntry.CONTENT_URI, id);
-
+                Log.v(LOG_TAG, "Current stock URI is " + currentStockUri);
                 // Set the URI on the data field of the intent
                 intent.setData(currentStockUri);
 
@@ -87,34 +90,6 @@ public class MainActivity extends AppCompatActivity implements
 
         // Kick off the loader
         getLoaderManager().initLoader(STOCK_LOADER, null, this);
-    }
-
-    /**
-     * Helper method to insert hardcoded stock data into the database. For debugging purposes only.
-     */
-    private void insertStock() {
-        // Create a ContentValues object where column names are the keys,
-        // and Loreal Eyeliner stock attributes are the values.
-        ContentValues values = new ContentValues();
-        values.put(StockContract.StockEntry.COLUMN_STOCK_NAME, "Eyeliner");
-        values.put(StockContract.StockEntry.COLUMN_STOCK_SUPPLIER, "Loreal");
-        values.put(StockContract.StockEntry.COLUMN_STOCK_TYPE, StockContract.StockEntry.TYPE_TWO);
-        values.put(StockContract.StockEntry.COLUMN_STOCK_PRICE, 5);
-        values.put(StockContract.StockEntry.COLUMN_STOCK_QUANTITY, 10);
-
-        // Insert a new row for Loreal Eyeliner into the provider using the ContentResolver.
-        // Use the {@link StockEntry#CONTENT_URI} to indicate that we want to insert
-        // into the stock database table.
-        // Receive the new content URI that will allow us to access Loreal Eyeliner's data in the future.
-        Uri newUri = getContentResolver().insert(StockContract.StockEntry.CONTENT_URI, values);
-    }
-
-    /**
-     * Helper method to delete all stock in the database.
-     */
-    private void deleteAllStocks() {
-        int rowsDeleted = getContentResolver().delete(StockContract.StockEntry.CONTENT_URI, null, null);
-        Log.v("MainActivity", rowsDeleted + " rows deleted from stock database");
     }
 
     @Override
@@ -135,17 +110,84 @@ public class MainActivity extends AppCompatActivity implements
                 return true;
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
-                deleteAllStocks();
+                showDeleteConfirmationDialog();
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
+    /**
+     * Helper method to insert hardcoded stock data into the database. For debugging purposes only.
+     */
+    private void insertStock() {
+        // Create a ContentValues object where column names are the keys,
+        // and Loreal Eyeliner stock attributes are the values.
+        ContentValues values = new ContentValues();
+        values.put(StockContract.StockEntry.COLUMN_STOCK_IMAGE, getString(R.string.dummy_picture_uri));
+        values.put(StockContract.StockEntry.COLUMN_STOCK_NAME, "Eyeliner");
+        values.put(StockContract.StockEntry.COLUMN_STOCK_SUPPLIER, "Loreal");
+        values.put(StockContract.StockEntry.COLUMN_STOCK_TYPE, StockContract.StockEntry.TYPE_TWO);
+        values.put(StockContract.StockEntry.COLUMN_STOCK_PRICE, 5);
+        values.put(StockContract.StockEntry.COLUMN_STOCK_QUANTITY, 10);
+
+        // Insert a new row for Loreal Eyeliner into the provider using the ContentResolver.
+        // Use the {@link StockEntry#CONTENT_URI} to indicate that we want to insert
+        // into the stock database table.
+        // Receive the new content URI that will allow us to access Loreal Eyeliner's data in the future.
+        Uri newUri = getContentResolver().insert(StockContract.StockEntry.CONTENT_URI, values);
+        Log.v(LOG_TAG, "Table stocks: " + newUri);
+    }
+
+    private void showDeleteConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(getString(R.string.delete_dialog_all_items));
+        builder.setPositiveButton(getString(R.string.delete), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                deleteAllStocks();
+            }
+        });
+        builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+    /**
+     * Helper method to delete all stock in the database.
+     */
+    private void deleteAllStocks() {
+        if (StockContract.StockEntry.CONTENT_URI != null) {
+            int rowsDeleted = getContentResolver().delete(
+                    StockContract.StockEntry.CONTENT_URI,
+                    null,
+                    null);
+
+            // Show a toast message depending on whether or not the delete was successful.
+            if (rowsDeleted == 0) {
+                Toast.makeText(this, getString(R.string.editor_delete_all_items_failed),
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, getString(R.string.editor_delete_all_items_successful),
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         // Define a projection that specifies the columns from the table we care about.
         String[] projection = {
                 StockContract.StockEntry._ID,
+                StockContract.StockEntry.COLUMN_STOCK_IMAGE,
                 StockContract.StockEntry.COLUMN_STOCK_NAME,
                 StockContract.StockEntry.COLUMN_STOCK_QUANTITY,
                 StockContract.StockEntry.COLUMN_STOCK_TYPE,
