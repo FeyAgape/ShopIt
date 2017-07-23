@@ -24,7 +24,13 @@
     <string name="editor_update_stock_failed">Error with updating Stock</string>
     <string name="editor_delete_stock_successful">Stock deleted</string>
     <string name="editor_delete_stock_failed">Error with deleting Stock</string>
-    <string name="negative_quantity">Stock cannot have a negative quantity</string>
+    <string name="negative_quantity">Stock can\'t have a negative quantity</string>
+    <string name="no_quantity">Enter some value</string>
+    <string name="quantity_limit">Value can\'t be more than 100.</string>
+    <string name="require_attributes">The stock requires more information</string>
+    <string name="require_image">The Item requires an image</string>
+    <string name="require_name">The Item requires a name</string>
+
     <string name="sale_button">Sale made</string>
     <string name="sale_successful">Stock sold</string>
     <string name="sale_unsuccessful">No more stock</string>
@@ -47,7 +53,7 @@
     <string name="product_overview">Stock</string>
     <string name="overview">Product Overview</string>
     <string name="email_subject">Restock needed</string>
-    <string name="email_body">Stock items to be restock are:</string>
+    <string name="email_body">Stock items to be restock are:" "</string>
     <string name="email_extra">Quantity: 10(default)</string>
 
 

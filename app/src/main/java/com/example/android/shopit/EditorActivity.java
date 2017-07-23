@@ -1,5 +1,6 @@
 package com.example.android.shopit;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
@@ -8,17 +9,20 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
-import android.provider.OpenableColumns;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
-import android.support.v4.content.FileProvider;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -35,10 +39,9 @@ import android.widget.Toast;
 import com.example.android.shopit.data.StockContract;
 import com.example.android.shopit.data.StockContract.StockEntry;
 
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Allows user to create a new stork or edit an existing one.
@@ -48,20 +51,21 @@ public class EditorActivity extends AppCompatActivity implements
 
     private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.shopit.data.StockContract.StockEntry";
 
+    private static final String LOG_TAG = EditorActivity.class.getSimpleName();
 
     //Identifier for the stork data loader
     private static final int EXISTING_STOCK_LOADER = 0;
     private static final int STOCK_IMAGE = 0;
+    private static final int PERMISSIONS_REQUEST = 2;
+
 
     //Content URI for the existing stork (null if it's new)
     private Uri mCurrentStockUri;
 
     //Image related
-    private ImageView itemImage;
-    private Bitmap bitmap;
-    private Uri uri;
-    private boolean galleryImage = false;
-    private String uriString;
+    private ImageView mStockImageView;
+    private ImageButton mCameraButton;
+    private Uri mImageUri;
 
     //EditText fields
     private EditText mNameEditText;
@@ -72,25 +76,24 @@ public class EditorActivity extends AppCompatActivity implements
     private TextView mQuantityTextView;
     private ImageButton mReduceQuantity;
     private ImageButton mIncreaseQuantity;
-
-    // ImageView for the stock image
-    private ImageView mStockImageView;
+    private int quantity;
 
     //Supplier order more ImageButton
     private ImageButton mOrderMore;
 
-    //EditText field to enter the stock's type
+    //Field to enter the stock's type
     private Spinner mTypeSpinner;
 
     /**
      * Type of stock. The possible valid values are in the StockContract.java file:
-     * {@link StockContract.StockEntry#TYPE_UNKNOWN}, {@link StockContract.StockEntry#TYPE_ONE}, or
-     * {@link StockContract.StockEntry#TYPE_TWO}.
+     * {@link StockEntry#TYPE_UNKNOWN}, {@link StockEntry#TYPE_ONE}, or
+     * {@link StockEntry#TYPE_TWO}.
      */
-    private int mType = StockContract.StockEntry.TYPE_UNKNOWN;
+    private int mType = StockEntry.TYPE_UNKNOWN;
 
-    // Boolean flag that keeps track of whether the stock has been edited (true) or not (false)
+    // Boolean flag that keeps track of the stock (true) or not (false)
     private boolean mStockHasChanged = false;
+    private boolean mStockSaved = false;
 
     /**
      * OnTouchListener that listens for any user touches on a View, implying that they are modifying
@@ -98,7 +101,7 @@ public class EditorActivity extends AppCompatActivity implements
      */
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
         @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
+        public boolean onTouch(View view, MotionEvent event) {
             mStockHasChanged = true;
             return false;
         }
@@ -121,7 +124,7 @@ public class EditorActivity extends AppCompatActivity implements
             setTitle(getString(R.string.editor_activity_title_new_stock));
 
             // Invalidate the options menu, so the "Delete" menu option can be hidden.
-            // (It doesn't make sense to delete a pet that hasn't been created yet.)
+            // (It doesn't make sense to delete a stock that hasn't been created yet.)
             invalidateOptionsMenu();
         } else {
             // Otherwise this is an existing stock, so change app bar to say "Edit Stock"
@@ -133,34 +136,43 @@ public class EditorActivity extends AppCompatActivity implements
         }
 
         // Find all relevant views that we will need to read user input from
+        mStockImageView = (ImageView) findViewById(R.id.stock_image);
+        mCameraButton = (ImageButton) findViewById(R.id.camera);
         mNameEditText = (EditText) findViewById(R.id.edit_stock_name);
         mSupplierEditText = (EditText) findViewById(R.id.edit_stock_supplier);
         mPriceEditText = (EditText) findViewById(R.id.edit_stock_price);
-        mTypeSpinner = (Spinner) findViewById(R.id.spinner_type);
         mIncreaseQuantity = (ImageButton) findViewById(R.id.add);
         mReduceQuantity = (ImageButton) findViewById(R.id.remove);
         mQuantityTextView = (TextView) findViewById(R.id.quantity_textView);
-        mStockImageView = (ImageView) findViewById(R.id.stock_image);
+        mTypeSpinner = (Spinner) findViewById(R.id.spinner_type);
         mOrderMore = (ImageButton) findViewById(R.id.supplier_order_more);
 
-        // Placeholder image for image view
-        mStockImageView.setImageResource(R.drawable.supplier);
-
+        mCameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Invoke method for opening an image folder
+                requestPermissions();
+                mStockHasChanged = true;
+            }
+        });
 
         // Setup OnTouchListeners on all the input fields, so we can determine if the user
         // has touched or modified them. This will let us know if there are unsaved changes
         // or not, if the user tries to leave the editor without saving.
+        mStockImageView.setOnTouchListener(mTouchListener);
         mNameEditText.setOnTouchListener(mTouchListener);
         mSupplierEditText.setOnTouchListener(mTouchListener);
         mPriceEditText.setOnTouchListener(mTouchListener);
-        mTypeSpinner.setOnTouchListener(mTouchListener);
         mIncreaseQuantity.setOnTouchListener(mTouchListener);
         mReduceQuantity.setOnTouchListener(mTouchListener);
         mQuantityTextView.setOnTouchListener(mTouchListener);
-        mStockImageView.setOnTouchListener(mTouchListener);
+        mTypeSpinner.setOnTouchListener(mTouchListener);
         mOrderMore.setOnTouchListener(mTouchListener);
 
         setupSpinner();
+        orderMore();
+        reduceQuantity();
+        increaseQuantity();
     }
 
     /**
@@ -203,216 +215,268 @@ public class EditorActivity extends AppCompatActivity implements
     }
 
     // open an email when the user clicks the supplier order more button
-    public void composeEmail(View view) {
+    private void orderMore() {
+        mOrderMore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-        String message = getString(R.string.email_body)
-                + mNameEditText.getText().toString().trim() + "\n";
+                String message = getString(R.string.email_body)
+                        + mNameEditText.getText().toString().trim() + "\n";
 
-        message = message + getString(R.string.email_extra);
+                message = message + getString(R.string.email_extra);
 
-        Intent intent = new Intent(Intent.ACTION_SENDTO);
-        intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+                Intent intent = new Intent(Intent.ACTION_SENDTO);
+                intent.setData(Uri.parse("mailto:")); // only email apps should handle this
 
-        intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
-        intent.putExtra(Intent.EXTRA_TEXT, message);
+                intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
+                intent.putExtra(Intent.EXTRA_TEXT, message);
 
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
-        }
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
     }
 
-    public void increaseQuantity(View view) {
-
-        String quantity = mQuantityTextView.getText().toString().trim();
-
-        int q = Integer.parseInt(quantity);
-        q++;
-        String finalQuantity = String.valueOf(q);
-
-        mQuantityTextView.setText(finalQuantity);
+    /**
+     * Setup the minus quantity button that allows the user to control the number of stock.
+     */
+    private void reduceQuantity() {
+        mReduceQuantity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mQuantityTextView.getText().toString().equals(null) ||
+                        mQuantityTextView.getText().toString().equals("")) {
+                    Toast.makeText(EditorActivity.this, getString(R.string.no_quantity),
+                            Toast.LENGTH_SHORT).show();
+                } else if (quantity < 2) {
+                    Toast.makeText(EditorActivity.this, getString(R.string.negative_quantity),
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    quantity = Integer.parseInt(mQuantityTextView.getText().toString());
+                    mQuantityTextView.setText(String.valueOf(quantity - 1));
+                }
+            }
+        });
     }
 
-    public void decreaseQuantity(View view) {
-
-        String quantity = mQuantityTextView.getText().toString().trim();
-
-        int q = Integer.parseInt(quantity);
-        if (q > 0) {
-            q--;
-            String finalQuantity = String.valueOf(q);
-            mQuantityTextView.setText(finalQuantity);
-        } else
-            Toast.makeText(this, getString(R.string.negative_quantity),
-                    Toast.LENGTH_SHORT).show();
+    /**
+     * Setup the plus quantity button that allows the user to control the number of stock.
+     */
+    private void increaseQuantity() {
+        mIncreaseQuantity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mQuantityTextView.getText().toString().equals(null) ||
+                        mQuantityTextView.getText().toString().equals("")) {
+                    Toast.makeText(EditorActivity.this, getString(R.string.no_quantity),
+                            Toast.LENGTH_SHORT).show();
+                } else if (quantity > 997) {
+                    Toast.makeText(EditorActivity.this, getString(R.string.quantity_limit),
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    quantity = Integer.parseInt(mQuantityTextView.getText().toString());
+                    mQuantityTextView.setText(String.valueOf(quantity + 1));
+                }
+            }
+        });
     }
 
+    /**
+     * Toast message for when the sale button is pressed in the ListView.
+     */
     public void onSalePress(View view) {
 
         Toast.makeText(this, R.string.sale_button, Toast.LENGTH_SHORT).show();
     }
 
-    // open the camera with intent when the user clicks the camera button
-    public void addNewImage(View view) {
+    /**
+     * Method for making image request.
+     */
+    public void requestPermissions() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        PERMISSIONS_REQUEST);
+            }
+        } else {
+            mCameraButton.setEnabled(true);
+            openImageSelector();
+        }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    openImageSelector();
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == STOCK_IMAGE && resultCode == Activity.RESULT_OK) {
+            if (data != null) {
+                mImageUri = data.getData();
+                Log.v(LOG_TAG, "Uri: " + mImageUri);
+
+                mStockImageView.setImageURI(mImageUri);
+                mStockImageView.setImageBitmap(getBitmapFromUri(mImageUri));
+                mStockImageView.invalidate();
+            }
+        }
+    }
+
+    public Bitmap getBitmapFromUri(Uri uri) {
+        if (uri == null || uri.toString().isEmpty()) {
+            return null;
+        }
+
+        // Get the dimensions of the View
+        int targetWidth = mStockImageView.getWidth();
+        int targetHeight = mStockImageView.getHeight();
+
+        InputStream inputStream = null;
+        try {
+            inputStream = this.getContentResolver().openInputStream(uri);
+
+            // Get the size of the bitmap
+            BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+            bmOptions.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(inputStream, null, bmOptions);
+            inputStream.close();
+
+            int photoWidth = bmOptions.outWidth;
+            int photoHeight = bmOptions.outHeight;
+
+            // Determine the image size
+            int scaleFactor = Math.min(photoWidth / targetWidth, photoHeight / targetHeight);
+
+            // Scale the image file into a Bitmap sized to fill the View
+            bmOptions.inJustDecodeBounds = false;
+            bmOptions.inSampleSize = scaleFactor;
+            bmOptions.inPurgeable = true;
+
+            inputStream = this.getContentResolver().openInputStream(uri);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream, null, bmOptions);
+            inputStream.close();
+            return bitmap;
+
+        } catch (FileNotFoundException noFile) {
+            Log.e(LOG_TAG, "Failed to load image.", noFile);
+            return null;
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Failed to load image.", e);
+            return null;
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException ioe) {
+            }
+        }
+    }
+
+    private void openImageSelector() {
         Intent intent;
-        intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        if (Build.VERSION.SDK_INT < 19) {
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+        } else {
+            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+        }
+
         intent.setType("image/*");
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), STOCK_IMAGE);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCodes, Intent resultData) {
-
-        if (resultCodes == Activity.RESULT_OK && resultData != null) {
-            uri = resultData.getData();
-            bitmap = getBitmapFromCurrentItemURI(uri);
-            mStockImageView.setImageBitmap(bitmap);
-            uriString = getShareableImageUri().toString();
-            galleryImage = true;
-        }
-    }
-
-    private Bitmap getBitmapFromCurrentItemURI(Uri uri) {
-
-        ParcelFileDescriptor parcelFileDescriptor = null;
-
-        try {
-
-            parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r");
-            FileDescriptor fileDescriptor = null;
-
-            if (parcelFileDescriptor != null)
-                fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-
-            Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);
-
-            if (parcelFileDescriptor != null) parcelFileDescriptor.close();
-
-            return image;
-        } catch (Exception e) {
-
-            return null;
-        } finally {
-
-            try {
-
-                if (parcelFileDescriptor != null) parcelFileDescriptor.close();
-
-            } catch (IOException e) {
-
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public Uri getShareableImageUri() {
-
-        Uri imagesUri;
-
-        if (galleryImage) {
-            String filename = PathFinder();
-            savingInFile(getCacheDir(), filename, bitmap, Bitmap.CompressFormat.JPEG, 100);
-            File imagesFile = new File(getCacheDir(), filename);
-
-            imagesUri = FileProvider.getUriForFile(this, FILE_PROVIDER_AUTHORITY, imagesFile);
-        } else {
-
-            imagesUri = uri;
-        }
-        return imagesUri;
-    }
-
-    public String PathFinder() {
-
-        Cursor returnCursor =
-                getContentResolver().query
-                        (uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
-
-        if (returnCursor != null) returnCursor.moveToFirst();
-
-        String fileNames = null;
-
-        if (returnCursor != null) fileNames = returnCursor.getString
-                (returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-
-        if (returnCursor != null) returnCursor.close();
-
-        return fileNames;
-    }
-
-    public boolean savingInFile(File dir, String fileName, Bitmap bm, Bitmap.CompressFormat format,
-                                int quality) {
-
-        File imagesFile = new File(dir, fileName);
-
-        FileOutputStream fileOutputStream = null;
-
-        try {
-
-            fileOutputStream = new FileOutputStream(imagesFile);
-            bm.compress(format, quality, fileOutputStream);
-            fileOutputStream.close();
-
-            return true;
-
-        } catch (IOException e) {
-
-            if (fileOutputStream != null) try {
-
-                fileOutputStream.close();
-
-            } catch (IOException e1) {
-
-                e1.printStackTrace();
-            }
-        }
-        return false;
-    }
-
-
     /**
      * Get user input from editor and save stock into database.
      */
-    private void saveStock() {
+    private boolean saveStock() {
         // Read from input fields
         // Use trim to eliminate leading or trailing white space
-        String imageString = uriString;
         String nameString = mNameEditText.getText().toString().trim();
         String supplierString = mSupplierEditText.getText().toString().trim();
         String quantityString = mQuantityTextView.getText().toString().trim();
         String priceString = mPriceEditText.getText().toString().trim();
 
 
-        // Check if this is supposed to be a new store
+        // Check if this is supposed to be a new stock
         // and check if all the fields in the editor are blank
         if (mCurrentStockUri == null &&
-                TextUtils.isEmpty(nameString) && TextUtils.isEmpty(supplierString) &&
-                TextUtils.isEmpty(priceString) && mType == StockContract.StockEntry.TYPE_UNKNOWN) {
+                TextUtils.isEmpty(nameString) &&
+                TextUtils.isEmpty(supplierString) &&
+                TextUtils.isEmpty(quantityString) &&
+                TextUtils.isEmpty(priceString) &&
+                mType == StockEntry.TYPE_UNKNOWN &&
+                mImageUri == null) {
             // Since no fields were modified, we can return early without creating a new stock.
             // No need to create ContentValues and no need to do any ContentProvider operations.
-            return;
+            Toast.makeText(this, getString(R.string.require_attributes),
+                    Toast.LENGTH_SHORT).show();
+            mStockSaved = false;
+            return mStockSaved;
         }
 
         // Create a ContentValues object where column names are the keys,
         // and stork attributes from the editor are the values.
         ContentValues values = new ContentValues();
-        values.put(StockContract.StockEntry.COLUMN_STOCK_NAME, nameString);
-        values.put(StockContract.StockEntry.COLUMN_STOCK_SUPPLIER, supplierString);
+        if (mImageUri == null) {
+            Toast.makeText(this, getString(R.string.require_image),
+                    Toast.LENGTH_SHORT).show();
+            mStockSaved = false;
+            return mStockSaved;
+        }
+        values.put(StockEntry.COLUMN_STOCK_IMAGE, mImageUri.toString());
+
+        if (TextUtils.isEmpty(nameString)) {
+            Toast.makeText(this, getString(R.string.require_name),
+                    Toast.LENGTH_SHORT).show();
+            mStockSaved = false;
+            return mStockSaved;
+        }
+        values.put(StockEntry.COLUMN_STOCK_NAME, nameString);
+
+        values.put(StockEntry.COLUMN_STOCK_SUPPLIER, supplierString);
+        values.put(StockEntry.COLUMN_STOCK_QUANTITY, quantityString);
         values.put(StockEntry.COLUMN_STOCK_TYPE, mType);
+
+        if (!TextUtils.isEmpty(quantityString)) {
+            quantity = Integer.parseInt(quantityString);
+        }
+        values.put(StockEntry.COLUMN_STOCK_QUANTITY, quantity);
         // If the price is not provided by the user, don't try to parse the string into an
         // integer value. Use 0 by default.
         int price = 0;
         if (!TextUtils.isEmpty(priceString)) {
             price = Integer.parseInt(priceString);
         }
-        values.put(StockContract.StockEntry.COLUMN_STOCK_PRICE, price);
+        values.put(StockEntry.COLUMN_STOCK_PRICE, price);
 
         // Determine if this is a new or existing price by checking if mCurrentStockUri is null or not
         if (mCurrentStockUri == null) {
             // This is a NEW stock, so insert a new stock into the provider,
             // returning the content URI for the new stock.
-            Uri newUri = getContentResolver().insert(StockContract.StockEntry.CONTENT_URI, values);
+            Uri newUri = getContentResolver().insert(StockEntry.CONTENT_URI, values);
 
             // Show a toast message depending on whether or not the insertion was successful.
             if (newUri == null) {
@@ -442,6 +506,8 @@ public class EditorActivity extends AppCompatActivity implements
                         Toast.LENGTH_SHORT).show();
             }
         }
+        mStockSaved = true;
+        return mStockSaved;
     }
 
     @Override
@@ -474,9 +540,10 @@ public class EditorActivity extends AppCompatActivity implements
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
                 // Save stock to database
-                saveStock();
-                // Exit activity
-                finish();
+                if (saveStock()) {
+                    // Exit activity
+                    finish();
+                }
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
@@ -537,16 +604,19 @@ public class EditorActivity extends AppCompatActivity implements
         showUnsavedChangesDialog(discardButtonClickListener);
     }
 
+
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         // Since the editor shows all stock attributes, define a projection that contains
         // all columns from the stock table
         String[] projection = {
-                StockContract.StockEntry._ID,
-                StockContract.StockEntry.COLUMN_STOCK_NAME,
-                StockContract.StockEntry.COLUMN_STOCK_SUPPLIER,
-                StockContract.StockEntry.COLUMN_STOCK_TYPE,
-                StockContract.StockEntry.COLUMN_STOCK_PRICE};
+                StockEntry._ID,
+                StockEntry.COLUMN_STOCK_IMAGE,
+                StockEntry.COLUMN_STOCK_NAME,
+                StockEntry.COLUMN_STOCK_SUPPLIER,
+                StockEntry.COLUMN_STOCK_TYPE,
+                StockEntry.COLUMN_STOCK_QUANTITY,
+                StockEntry.COLUMN_STOCK_PRICE};
 
         // This loader will execute the ContentProvider's query method on a background thread
         return new CursorLoader(this,   // Parent activity context
@@ -559,6 +629,7 @@ public class EditorActivity extends AppCompatActivity implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        Log.v(LOG_TAG, "Now is onLoadFinished called");
         // Bail early if the cursor is null or there is less than 1 row in the cursor
         if (cursor == null || cursor.getCount() < 1) {
             return;
@@ -568,20 +639,27 @@ public class EditorActivity extends AppCompatActivity implements
         // (This should be the only row in the cursor)
         if (cursor.moveToFirst()) {
             // Find the columns of stock attributes that we're interested in
-            int nameColumnIndex = cursor.getColumnIndex(StockContract.StockEntry.COLUMN_STOCK_NAME);
-            int supplierColumnIndex = cursor.getColumnIndex(StockContract.StockEntry.COLUMN_STOCK_SUPPLIER);
+            int imageColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_IMAGE);
+            int nameColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_NAME);
+            int supplierColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_SUPPLIER);
             int typeColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_TYPE);
-            int priceColumnIndex = cursor.getColumnIndex(StockContract.StockEntry.COLUMN_STOCK_PRICE);
+            int quantityColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_QUANTITY);
+            int priceColumnIndex = cursor.getColumnIndex(StockEntry.COLUMN_STOCK_PRICE);
 
             // Extract out the value from the Cursor for the given column index
+            String imageUriString = cursor.getString(imageColumnIndex);
             String name = cursor.getString(nameColumnIndex);
             String supplier = cursor.getString(supplierColumnIndex);
             int type = cursor.getInt(typeColumnIndex);
+            quantity = cursor.getInt(quantityColumnIndex);
             int price = cursor.getInt(priceColumnIndex);
 
             // Update the views on the screen with the values from the database
+            mImageUri = Uri.parse(imageUriString);
+            mStockImageView.setImageURI(mImageUri);
             mNameEditText.setText(name);
             mSupplierEditText.setText(supplier);
+            mQuantityTextView.setText(Integer.toString(quantity));
             mPriceEditText.setText(Integer.toString(price));
 
             // type is a dropdown spinner, so map the constant value from the database
@@ -603,9 +681,12 @@ public class EditorActivity extends AppCompatActivity implements
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        Log.v(LOG_TAG, "Now is onLoaderReset called");
         // If the loader is invalidated, clear out all the data from the input fields.
+        mStockImageView.setImageURI(mImageUri);
         mNameEditText.setText("");
         mSupplierEditText.setText("");
+        mQuantityTextView.setText("");
         mPriceEditText.setText("");
         mTypeSpinner.setSelection(0); // Select "Unknown" type
     }
@@ -627,7 +708,7 @@ public class EditorActivity extends AppCompatActivity implements
         builder.setNegativeButton(R.string.keep_editing, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked the "Keep editing" button, so dismiss the dialog
-                // and continue editing the pet.
+                // and continue editing the stock.
                 if (dialog != null) {
                     dialog.dismiss();
                 }
