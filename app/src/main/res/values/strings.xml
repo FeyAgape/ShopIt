@@ -5,7 +5,7 @@
     <string name="action_insert_dummy_data">Insert Dummy Data</string>
     <string name="action_delete_all_entries">Delete All stock</string>
     <string name="action_delete">Delete</string>
-
+    <string name="action_save">Save</string>
     <!-- Title text for the empty view [CHAR LIMIT=50] -->
     <string name="empty_view_title_text">There are no stock for sale</string>
     <string name="empty_view_subtitle_text">Get started by adding an item to sell</string>
@@ -13,9 +13,6 @@
     <!-- Title for the activity[CHAR LIMIT=20] -->
     <string name="editor_activity_title_new_stock">Add Stock</string>
     <string name="editor_activity_title_edit_stock">Edit Stock</string>
-
-    <!-- Label for editor menu option [CHAR LIMIT=20] -->
-    <string name="action_save">Save</string>
 
     <!-- Toast message in editor [CHAR LIMIT=NONE] -->
     <string name="editor_insert_stock_successful">Stock saved</string>
@@ -30,7 +27,6 @@
     <string name="require_attributes">The stock requires more information</string>
     <string name="require_image">The Item requires an image</string>
     <string name="require_name">The Item requires a name</string>
-
     <string name="sale_button">Sale made</string>
     <string name="sale_successful">Stock sold</string>
     <string name="sale_unsuccessful">No more stock</string>
@@ -52,22 +48,20 @@
     <!-- Label for overview category of attributes in the editor [CHAR LIMIT=30] -->
     <string name="product_overview">Stock</string>
     <string name="overview">Product Overview</string>
-    <string name="email_subject">Restock needed</string>
-    <string name="email_body">Stock items to be restock are:" "</string>
-    <string name="email_extra">Quantity: 10(default)</string>
-
-
-    <!-- Label for the editor [CHAR LIMIT=30] -->
     <string name="product_price">Price</string>
     <string name="price_symbol">£</string>
     <string name="stock">Quantity</string>
     <string name="quantity">0</string>
 
+    <!-- Label for the email [CHAR LIMIT=30] -->
+    <string name="email_subject">Restock needed</string>
+    <string name="email_body">Stock items to be restock are:" "</string>
+    <string name="email_extra">Quantity: 10(default)</string>
+
     <!-- Text hint in the editor [CHAR LIMIT=30] -->
     <string name="hint_name">Name</string>
     <string name="hint_supplier">Supplier</string>
     <string name="hint_price">Price</string>
-
 
     <!-- Label for dropdown menu option for the type of stock [CHAR LIMIT=20] -->
     <string name="product_type">Type</string>
